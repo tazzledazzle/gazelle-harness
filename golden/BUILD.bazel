@@ -1,0 +1,10 @@
+load('@rules_python//python:defs.bzl', 'py_test')
+
+py_test(
+    name = 'golden_test',
+    srcs = ['run_golden.py'],
+    main = 'run_golden.py',
+    # $(rootpath ...) expands to the binary's path relative to the runfiles root, where tests run
+    args = ['--gazelle', '$(rootpath //:gazelle_polyglot)', '--cases-dir', 'golden/cases'],
+    data = ['//:gazelle_polyglot'] + glob(['cases/**']),  # the cases travel with the test
+)
