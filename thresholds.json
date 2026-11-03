@@ -1,0 +1,5 @@
+{
+  "C1": {"max_missing_edges": 0, "max_extra_rate": 0.02, "reason": "proposed starting point; reset after the baseline run"},
+  "C2": {"max_noop_seconds": 10, "max_one_file_seconds": 2, "max_regression_pct": 15, "reason": "proposed; absolute limits apply to repos of 10000 packages or more"},
+  "C3": {"max_mutation_failures": 0, "reason": "any lost hand edit is a failure"}
+}
