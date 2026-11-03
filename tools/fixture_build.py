@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-'''C7 build check: regenerate the polyglot fixture with every language, then bazel build and test it.
+"""C7 build check: regenerate the polyglot fixture with every language, then bazel build and test it.
 
 Usage: python3 tools/fixture_build.py --gazelle "$GAZELLE_BIN" [--bazel bazel] [--case fixtures/polyglot]
 The scratch workspace is kept and its path printed, so you can inspect it after a failure.
-'''
+"""
 import argparse
 import pathlib
 import sys

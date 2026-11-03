@@ -1,4 +1,4 @@
-'''Unit test for corpus_fetch using a throwaway local git repository (no network, no Bazel).'''
+"""Unit test for corpus_fetch using a throwaway local git repository (no network, no Bazel)."""
 import pathlib
 import subprocess
 import sys
@@ -15,7 +15,7 @@ def sh(args, cwd):
 
 
 def make_upstream(path):
-    '''Create a git repo with BUILD files in a/ and b/ plus a MODULE.bazel; return the commit id.'''
+    """Create a git repo with BUILD files in a/ and b/ plus a MODULE.bazel; return the commit id."""
     path.mkdir()
     sh(['git', 'init', '-q'], path)
     (path / 'MODULE.bazel').write_text('module(name = "x")' + chr(10))

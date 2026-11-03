@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-'''Compare package-level dependency edges between original and regenerated BUILD files.
+"""Compare package-level dependency edges between original and regenerated BUILD files.
 
 Usage: python3 tools/depdiff.py --id dagger [--bazel bazel]
 Needs .corpus/<id>/{tree,original_builds,work} from corpus_run.py.
-'''
+"""
 import argparse
 import json
 import shutil
@@ -24,7 +24,7 @@ def edge_target(label):
 
 
 def edges_from_lines(lines):
-    '''Parse streamed_jsonproto query lines into a set of (package, target) edges.'''
+    """Parse streamed_jsonproto query lines into a set of (package, target) edges."""
     edges = set()
     for line in lines:
         line = line.strip()

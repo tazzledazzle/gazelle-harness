@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-'''H6: directory-scoped runs in shuffled order must produce the same BUILD files as one whole-repo run.
+"""H6: directory-scoped runs in shuffled order must produce the same BUILD files as one whole-repo run.
 
 Usage:
   python3 tools/check_order.py --golden-case golden/cases/go/basic --gazelle "$GAZELLE_BIN" [--seed 7]
   python3 tools/check_order.py --workspace .corpus/dagger/work --gazelle "$GAZELLE_BIN" -- -lang=java
-'''
+"""
 import argparse
 import difflib
 import pathlib

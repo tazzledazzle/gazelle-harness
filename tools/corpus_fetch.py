@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-'''Fetch a corpus repo from your fork at a pinned commit, strip BUILD files, keep the originals.
+"""Fetch a corpus repo from your fork at a pinned commit, strip BUILD files, keep the originals.
 
 Usage:
   python3 tools/corpus_fetch.py --id dagger --use-upstream --pin   # first time, before forks exist
   python3 tools/corpus_fetch.py --id dagger                        # later: fork URL + pinned commit
   python3 tools/corpus_fetch.py --all
 Output under .corpus/<id>/: tree/ (stripped), original_builds/ (removed files), META.json
-'''
+"""
 import argparse
 import fnmatch
 import pathlib

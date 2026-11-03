@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Golden test runner for Gazelle extensions. See the case layout in the hand-off doc.'''
+"""Golden test runner for Gazelle extensions. See the case layout in the hand-off doc."""
 import argparse
 import difflib
 import os
@@ -16,7 +16,7 @@ def find_cases(cases_dir):
 
 
 def materialize(case, scratch):
-    '''Copy input/ into scratch, renaming BUILD.in to BUILD.bazel.'''
+    """Copy input/ into scratch, renaming BUILD.in to BUILD.bazel."""
     src = case / 'input'
     for path in sorted(src.rglob('*')):
         dest = scratch / path.relative_to(src)
@@ -36,7 +36,7 @@ def run_gazelle(gazelle, scratch, extra):
 
 
 def collect_builds(root):
-    '''Map expected-file name (BUILD.out path) -> text for every generated BUILD.bazel.'''
+    """Map expected-file name (BUILD.out path) -> text for every generated BUILD.bazel."""
     out = {}
     for path in sorted(root.rglob('BUILD.bazel')):
         out[str(path.relative_to(root).with_name('BUILD.out'))] = path.read_text()
@@ -61,7 +61,7 @@ def diff_text(name, want, got):
 
 
 def check_case(gazelle, case, update):
-    '''Return a list of failure messages; an empty list means the case passed.'''
+    """Return a list of failure messages; an empty list means the case passed."""
     with tempfile.TemporaryDirectory() as tmp:
         scratch = pathlib.Path(tmp)
         materialize(case, scratch)
@@ -92,6 +92,7 @@ def check_case(gazelle, case, update):
         if second.returncode == 0 and collect_builds(scratch) != got:
             failures.append('second run changed the output (not idempotent)')
         return failures
+    return None
 
 
 def main():

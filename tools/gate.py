@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-'''Turn measurements into pass/fail using thresholds.json.
+"""Turn measurements into pass/fail using thresholds.json.
 
 Usage: python3 tools/gate.py [--corpus-glob '.corpus/*/results.json'] [--bench bench_results/bench.json]
                              [--baseline bench_results/baseline.json] [--mutations bench_results/mutations.json]
-'''
+"""
 import argparse
 import glob
 import pathlib

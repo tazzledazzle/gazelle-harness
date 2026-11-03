@@ -1,4 +1,4 @@
-'''Positive and negative test for tools/gazelle_check.sh (needs GAZELLE_BIN).'''
+"""Positive and negative test for tools/gazelle_check.sh (needs GAZELLE_BIN)."""
 import os
 import pathlib
 import subprocess
@@ -10,7 +10,7 @@ CHECK = ROOT / 'tools' / 'gazelle_check.sh'
 
 
 def make_workspace(tmp):
-    '''A tiny Go workspace where package a has no BUILD file, so Gazelle has work to do.'''
+    """A tiny Go workspace where package a has no BUILD file, so Gazelle has work to do."""
     (tmp / 'BUILD.bazel').write_text('# gazelle:prefix example.com/drift' + chr(10))  # Go needs an import prefix
     (tmp / 'a').mkdir()
     (tmp / 'a' / 'a.go').write_text('package a' + chr(10))

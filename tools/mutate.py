@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-'''C3: hand edits must survive regeneration. Mutates generated BUILD files, reruns Gazelle, checks the outcome.
+"""C3: hand edits must survive regeneration. Mutates generated BUILD files, reruns Gazelle, checks the outcome.
 
 Usage:
   python3 tools/mutate.py --golden-case golden/cases/go/basic --gazelle "$GAZELLE_BIN"
   python3 tools/mutate.py --workspace .corpus/dagger/work --gazelle "$GAZELLE_BIN" -- -lang=java
 Arguments after -- are passed to Gazelle.
 Writes bench_results/mutations.json for the gate.
-'''
+"""
 import argparse
 import pathlib
 import re
@@ -23,7 +23,7 @@ SKIP_KINDS = {'load', 'package'}  # multi-line load( and package( blocks are not
 
 
 def find_rules(text):
-    '''Return (lines, rules); each rule is {kind, name, start, end} with line indexes.'''
+    """Return (lines, rules); each rule is {kind, name, start, end} with line indexes."""
     lines = text.splitlines()
     rules = []
     i = 0
@@ -44,7 +44,7 @@ def find_rules(text):
 
 
 def apply_mutation(text, mutation):
-    '''Return (new_text, marker); marker must appear after regeneration when expect is survives.'''
+    """Return (new_text, marker); marker must appear after regeneration when expect is survives."""
     lines, rules = find_rules(text)
     rule = rules[0]
     name_line = next(i for i in range(rule['start'], rule['end']) if lines[i].strip().startswith('name ='))
@@ -84,7 +84,7 @@ def regenerate(gazelle, root, extra):
 
 
 def prepare_workspace(args, root):
-    '''Create root from a golden case input or from a copy of a workspace directory.'''
+    """Create root from a golden case input or from a copy of a workspace directory."""
     if args.golden_case:
         sys.path.insert(0, str(ROOT / 'golden'))
         import run_golden
@@ -95,7 +95,7 @@ def prepare_workspace(args, root):
 
 
 def split_extra(argv):
-    '''Split argv at -- into (our arguments, Gazelle arguments).'''
+    """Split argv at -- into (our arguments, Gazelle arguments)."""
     if '--' in argv:
         i = argv.index('--')
         return argv[:i], argv[i + 1:]

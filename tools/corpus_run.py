@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-'''Regenerate BUILD files for a corpus repo with the polyglot Gazelle binary, then build and test.
+"""Regenerate BUILD files for a corpus repo with the polyglot Gazelle binary, then build and test.
 
 Usage:
   python3 tools/corpus_run.py --id grpc-kotlin --gazelle "$GAZELLE_BIN"
   python3 tools/corpus_run.py --all --skip-tests
 Output: .corpus/<id>/results.json and logs under .corpus/<id>/logs/
-'''
+"""
 import argparse
 import pathlib
 import re
@@ -17,7 +17,7 @@ import corpus_fetch
 
 
 def prepare_workspace(entry, base):
-    '''Copy the stripped tree to a fresh work directory and put the Gazelle directives in its root BUILD file.'''
+    """Copy the stripped tree to a fresh work directory and put the Gazelle directives in its root BUILD file."""
     work = base / 'work'
     if work.exists():
         shutil.rmtree(work)
@@ -34,7 +34,7 @@ def prepare_workspace(entry, base):
 
 
 def count_errors(log_path):
-    '''Count Bazel ERROR lines: a rough failure count for the report.'''
+    """Count Bazel ERROR lines: a rough failure count for the report."""
     text = pathlib.Path(log_path).read_text(errors='replace')
     return len(re.findall('^ERROR:', text, flags=re.MULTILINE))
 

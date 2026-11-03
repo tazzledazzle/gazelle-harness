@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-'''H7: time Gazelle on synthetic repos (cold, no-op, one-file-change); p95 over several runs.
+"""H7: time Gazelle on synthetic repos (cold, no-op, one-file-change); p95 over several runs.
 
 Usage:
   python3 tools/bench.py --lang python --packages 1000 --gazelle "$GAZELLE_BIN" [--runs 5] [--baseline] [-- extra gazelle args]
 Writes bench_results/bench.json (entries keyed <lang>-<packages>); --baseline also stores baseline.json.
 If an extension prints a line starting with 'gazelle-stats ' (key=value pairs) to stderr when GAZELLE_STATS=1,
 the last such line is recorded as stats (for example parser invocations).
-'''
+"""
 import argparse
 import math
 import os
@@ -27,7 +27,7 @@ def p95(values):
 
 
 def measured_run(cmd, cwd):
-    '''Run cmd once; return (seconds, peak_rss_mb, stats). wait4 gives this child its own resource usage.'''
+    """Run cmd once; return (seconds, peak_rss_mb, stats). wait4 gives this child its own resource usage."""
     err_file = tempfile.TemporaryFile()
     env = {**os.environ, 'GAZELLE_STATS': '1'}
     start = time.perf_counter()
@@ -57,12 +57,12 @@ def bench(lang, packages, gazelle, runs, extra, fanout=3, seed=1):
         pristine = tmp / 'pristine'
         synth.generate(lang, pristine, packages, fanout, seed)
 
-        def cmd(ws):
-            return [gazelle, '-repo_root=' + str(ws)] + flags
+        def cmd(workspace):
+            return [gazelle, '-repo_root=' + str(workspace)] + flags
 
-        def timed(ws):
+        def timed(workspace):
             nonlocal peak, stats
-            seconds, rss, run_stats = measured_run(cmd(ws), ws)
+            seconds, rss, run_stats = measured_run(cmd(workspace), workspace)
             peak, stats = max(peak, rss), run_stats or stats
             return seconds
 

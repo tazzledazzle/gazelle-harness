@@ -8,7 +8,7 @@ import depdiff  # noqa: E402
 
 
 def rule(name, kind, deps):
-    '''One line of bazel query --output=streamed_jsonproto, built with json.dumps.'''
+    """One line of Bazel query --output=streamed_jsonproto, built with json.dumps."""
     return json.dumps({'type': 'RULE', 'rule': {'name': name, 'ruleClass': kind,
                                                 'attribute': [{'name': 'deps', 'stringListValue': deps}]}})
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Print the newest Bazel Central Registry version of each module named on the command line.'''
+"""Print the newest Bazel Central Registry version of each module named on the command line."""
 import json
 import sys
 import urllib.request
