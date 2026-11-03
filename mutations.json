@@ -1,0 +1,7 @@
+{
+  "mutations": [
+    {"name": "custom attribute survives regeneration", "op": "add_attr", "attr": "tags = [\"manual\"],", "expect": "survives"},
+    {"name": "keep-marked dependency survives regeneration", "op": "add_keep", "expect": "survives"},
+    {"name": "deleted target is regenerated", "op": "delete_target", "expect": "restored"}
+  ]
+}
