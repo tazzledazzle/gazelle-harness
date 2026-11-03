@@ -1,0 +1,114 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 6 * * *'  # nightly: corpus and benchmark stages
+  workflow_dispatch:
+
+env:
+  # bazelisk installed under the name bazel, so .bazelversion is honoured
+  BAZELISK_URL: https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+
+jobs:
+  checks:  # stages 1 and 2: every pull request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install bazelisk as bazel
+        run: sudo curl -fsSL -o /usr/local/bin/bazel "$BAZELISK_URL" && sudo chmod +x /usr/local/bin/bazel
+      - name: Fast checks and polyglot fixture
+        run: bash scripts/ci_local.sh
+        env:
+          CI_BUILD_FIXTURE: '1'
+
+  corpus:  # stage 3: nightly, manual, or a pull request labelled corpus
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'corpus')
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false  # one failing repository must not hide the others
+      matrix:
+        repo: [dagger, grpc-java, gerrit, grpc-kotlin, bazel-diff, rules-kotlin-examples, ray, pigweed, bazel-examples-python, angular-components, angular-cli, bazel-examples-ts]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install bazelisk as bazel
+        run: sudo curl -fsSL -o /usr/local/bin/bazel "$BAZELISK_URL" && sudo chmod +x /usr/local/bin/bazel
+      - name: Let git read private forks
+        env:
+          CORPUS_TOKEN: ${{ secrets.CORPUS_TOKEN }}
+        run: |
+          if [ -n "$CORPUS_TOKEN" ]; then
+            git config --global url."https://x-access-token:${CORPUS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          fi
+      - name: Regenerate, build, test, compare dependencies
+        run: |
+          source scripts/env.sh
+          python3 tools/corpus_run.py --id ${{ matrix.repo }} --gazelle "$GAZELLE_BIN" --depdiff
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: corpus-${{ matrix.repo }}
+          path: |
+            .corpus/${{ matrix.repo }}/results.json
+            .corpus/${{ matrix.repo }}/depdiff.json
+            .corpus/${{ matrix.repo }}/logs
+
+  bench:  # stage 4: nightly or manual
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: checks
+    runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}  # set the BENCH_RUNNER variable to a dedicated runner label
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [python, java]
+        packages: [1000, 10000]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install bazelisk as bazel
+        run: sudo curl -fsSL -o /usr/local/bin/bazel "$BAZELISK_URL" && sudo chmod +x /usr/local/bin/bazel
+      - name: Benchmark
+        run: |
+          source scripts/env.sh
+          python3 tools/bench.py --lang ${{ matrix.lang }} --packages ${{ matrix.packages }} --gazelle "$GAZELLE_BIN"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ matrix.lang }}-${{ matrix.packages }}
+          path: bench_results/bench.json
+
+  gate:  # final: evaluates every threshold
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    needs: [corpus, bench]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Merge benchmark files
+        run: |
+          mkdir -p bench_results
+          python3 - <<'EOF'
+          import glob, json
+          merged = {}
+          for path in glob.glob('artifacts/bench-*/bench.json'):
+              merged.update(json.load(open(path)))
+          json.dump(merged, open('bench_results/bench.json', 'w'))
+          EOF
+      - name: Gate
+        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json'
