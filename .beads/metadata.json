@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "gazelle_harness",
+  "project_id": "9ec4e513-e273-4e6b-83ab-c42003dac2c4"
+}
