@@ -1,0 +1,7 @@
+# This repo is Bzlmod-only; the WORKSPACE variant lives inside individual corpus repos
+common --enable_bzlmod
+common --noenable_workspace
+# Print test output only when a test fails
+test --test_output=errors
+# Reuse downloaded artifacts across clean builds
+build --disk_cache=~/.cache/bazel-disk

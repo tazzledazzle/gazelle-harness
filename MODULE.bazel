@@ -1,0 +1,11 @@
+module(name = 'gazelle_harness', version = '0.0.0')
+
+# Gazelle itself: provides gazelle_binary and the Go and proto languages
+bazel_dep(name = 'gazelle', version = '0.51.3')
+
+# Needed for the golden py_test in step 2
+bazel_dep(name = 'rules_python', version = '2.4.3')
+
+python = use_extension('@rules_python//python/extensions:python.bzl', 'python')
+# Register one explicit interpreter; newer rules_python versions expect this
+python.toolchain(python_version = '3.12', is_default = True)

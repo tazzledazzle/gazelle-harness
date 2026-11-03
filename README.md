@@ -19,15 +19,15 @@ The seven criteria become pass/fail only when each has a number and a test, so e
 
 ### The seven criteria as testable requirements
 
-| ID | Criterion | Testable requirement | How it is verified |
-| --- | --- | --- | --- |
-| C1 | Accurate import-to-label resolution | On the corpus, zero missing deps and at most 2% unneeded deps, including third-party and generated code | Strict-deps builds (Java/Kotlin), import validation (Python), `ts_project` type-check build (JS/TS), plus an unused-deps scan |
-| C2 | Fast, incremental at monorepo scale | No-op run under 10 s and single-file change under 2 s on a 10,000-package synthetic repo | Benchmark harness, 5 runs, p95 |
-| C3 | Merge-safe | A second run produces zero diff; hand edits, keep markers, mapped macros and extra attributes survive regeneration | Idempotence and mutation tests |
-| C4 | CI drift detection | CI fails on any difference between committed and generated BUILD files, naming the files and the fix command | Negative test: stale BUILD file must turn CI red |
-| C5 | Granularity control | Per-file, per-package and per-module (or project) modes selectable by directive per subtree; switching modes keeps the repo buildable | Mode-matrix test |
-| C6 | Test and macro awareness | Tests, custom macros, annotation processors, compiler plugins and bundlers produce the right kinds and attributes | One fixture per macro or plugin |
-| C7 | One command for the polyglot repo | `bazel run //:gazelle` generates all four languages plus proto from one binary, with cross-language conflicts resolved | Polyglot fixture repo |
+| ID | Criterion                           | Testable requirement                                                                                                                  | How it is verified                                                                                                            |
+|----|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| C1 | Accurate import-to-label resolution | On the corpus, zero missing deps and at most 2% unneeded deps, including third-party and generated code                               | Strict-deps builds (Java/Kotlin), import validation (Python), `ts_project` type-check build (JS/TS), plus an unused-deps scan |
+| C2 | Fast, incremental at monorepo scale | No-op run under 10 s and single-file change under 2 s on a 10,000-package synthetic repo                                              | Benchmark harness, 5 runs, p95                                                                                                |
+| C3 | Merge-safe                          | A second run produces zero diff; hand edits, keep markers, mapped macros and extra attributes survive regeneration                    | Idempotence and mutation tests                                                                                                |
+| C4 | CI drift detection                  | CI fails on any difference between committed and generated BUILD files, naming the files and the fix command                          | Negative test: stale BUILD file must turn CI red                                                                              |
+| C5 | Granularity control                 | Per-file, per-package and per-module (or project) modes selectable by directive per subtree; switching modes keeps the repo buildable | Mode-matrix test                                                                                                              |
+| C6 | Test and macro awareness            | Tests, custom macros, annotation processors, compiler plugins and bundlers produce the right kinds and attributes                     | One fixture per macro or plugin                                                                                               |
+| C7 | One command for the polyglot repo   | `bazel run //:gazelle` generates all four languages plus proto from one binary, with cross-language conflicts resolved                | Polyglot fixture repo                                                                                                         |
 
 ### Shared test harness
 
@@ -76,20 +76,20 @@ gazelle-harness/
 
 I chose by fit to the harness, not by star count, because the highest-starred Bazel projects are mostly C++ or already unusual in ways that would hide generator bugs. Each pick had to be permissively licensed, already build with Bazel (so a working oracle exists), show activity in 2026, and stress at least one of C1 to C7. This is a first selection from public pages; I have not read licence files, measured sizes or built any of them.
 
-| Language | Repository | Why it earns a slot | Licence | To confirm |
-| --- | --- | --- | --- | --- |
-| Java | google/dagger | Annotation processors and generated classes (C1, C6); Bazel with a lockfile for Maven dependencies | Apache-2.0 (seen) | Size; which targets build offline |
-| Java | grpc/grpc-java | Protobuf-generated code; Bazel and Gradle side by side; built with and without Bzlmod in its own CI | Apache-2.0 (seen) | Bazel 9 status |
-| Java | GerritCodeReview/gerrit | Real application on Bazel 9.1 with Bzlmod, plugins, and a mixed Java, JS and Python tree; the scale probe for C2 | Apache-2.0 (confirm) | Too large for the size cap: use a server subset for correctness runs and the full tree only for benchmarks |
-| Kotlin | grpc/grpc-kotlin | Mostly Kotlin, with Java and protobuf; Bazel CI; published on the registry | Apache-2.0 (confirm) | Supports Bzlmod only, and JDK 22 at most, so it cannot join the WORKSPACE variant |
-| Kotlin | Tinder/bazel-diff | A real Kotlin application and CLI with Kotlin tests, built with Bazel | MIT (confirm) | Bzlmod-only mode; test depth |
-| Kotlin | bazelbuild/rules\_kotlin (examples) | Compiler plugins, Dagger and Android examples for C6; **provisional**, since it is a set of examples and not an application | Apache-2.0 (confirm) | Replace if a real third Kotlin application on Bazel turns up |
-| Python | ray-project/ray (Python subtree) | Large real Python code with Bazel test targets and protobuf-generated Python | Apache-2.0 (confirm) | Mostly C++ build files: strip and regenerate only Python ones |
-| Python | google/pigweed (Python modules) | Python on Bazel with pinned pip dependencies and a managed interpreter | Apache-2.0 (seen) | Same: Python files only; embedded toolchains out of scope |
-| Python | aspect-build/bazel-examples (Python) | Small, current, clean setup; the control case | Apache-2.0 (seen) | None known |
-| TypeScript | angular/components | Large TypeScript codebase on current `rules_js` and `rules_ts` with Bzlmod and pnpm | MIT (confirm) | Size; Angular-specific rules wrapping `ts_project` (good for C3 and C6) |
-| TypeScript | angular/angular-cli | Another Angular-org project moved to `rules_js` in 2025 | MIT (confirm) | Whether it still builds on current Bazel |
-| TypeScript | aspect-build/bazel-examples (JS and TS) | Non-Angular frameworks and test runners: React, Next.js, NestJS, Vue, Jest, for the runner and bundler work | Apache-2.0 (seen) | None known |
+| Language   | Repository                              | Why it earns a slot                                                                                                         | Licence              | To confirm                                                                                                 |
+|------------|-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|----------------------|------------------------------------------------------------------------------------------------------------|
+| Java       | google/dagger                           | Annotation processors and generated classes (C1, C6); Bazel with a lockfile for Maven dependencies                          | Apache-2.0 (seen)    | Size; which targets build offline                                                                          |
+| Java       | grpc/grpc-java                          | Protobuf-generated code; Bazel and Gradle side by side; built with and without Bzlmod in its own CI                         | Apache-2.0 (seen)    | Bazel 9 status                                                                                             |
+| Java       | GerritCodeReview/gerrit                 | Real application on Bazel 9.1 with Bzlmod, plugins, and a mixed Java, JS and Python tree; the scale probe for C2            | Apache-2.0 (confirm) | Too large for the size cap: use a server subset for correctness runs and the full tree only for benchmarks |
+| Kotlin     | grpc/grpc-kotlin                        | Mostly Kotlin, with Java and protobuf; Bazel CI; published on the registry                                                  | Apache-2.0 (confirm) | Supports Bzlmod only, and JDK 22 at most, so it cannot join the WORKSPACE variant                          |
+| Kotlin     | Tinder/bazel-diff                       | A real Kotlin application and CLI with Kotlin tests, built with Bazel                                                       | MIT (confirm)        | Bzlmod-only mode; test depth                                                                               |
+| Kotlin     | bazelbuild/rules\_kotlin (examples)     | Compiler plugins, Dagger and Android examples for C6; **provisional**, since it is a set of examples and not an application | Apache-2.0 (confirm) | Replace if a real third Kotlin application on Bazel turns up                                               |
+| Python     | ray-project/ray (Python subtree)        | Large real Python code with Bazel test targets and protobuf-generated Python                                                | Apache-2.0 (confirm) | Mostly C++ build files: strip and regenerate only Python ones                                              |
+| Python     | google/pigweed (Python modules)         | Python on Bazel with pinned pip dependencies and a managed interpreter                                                      | Apache-2.0 (seen)    | Same: Python files only; embedded toolchains out of scope                                                  |
+| Python     | aspect-build/bazel-examples (Python)    | Small, current, clean setup; the control case                                                                               | Apache-2.0 (seen)    | None known                                                                                                 |
+| TypeScript | angular/components                      | Large TypeScript codebase on current `rules_js` and `rules_ts` with Bzlmod and pnpm                                         | MIT (confirm)        | Size; Angular-specific rules wrapping `ts_project` (good for C3 and C6)                                    |
+| TypeScript | angular/angular-cli                     | Another Angular-org project moved to `rules_js` in 2025                                                                     | MIT (confirm)        | Whether it still builds on current Bazel                                                                   |
+| TypeScript | aspect-build/bazel-examples (JS and TS) | Non-Angular frameworks and test runners: React, Next.js, NestJS, Vue, Jest, for the runner and bundler work                 | Apache-2.0 (seen)    | None known                                                                                                 |
 
 Notes on the selection:
 
@@ -153,12 +153,12 @@ Notes on the selection:
 
 ### CI pipeline
 
-| Stage | Trigger | Runs |
-| --- | --- | --- |
-| 1. Fast | every pull request | H2 golden tests, H6, H8 negative test |
-| 2. Polyglot | pull requests touching any extension | H9 fixture, H5 mutation suite |
-| 3. Corpus | nightly and on a label | H3 and H4 for each language |
-| 4. Benchmark | nightly | H7 against baseline |
+| Stage        | Trigger                              | Runs                                  |
+|--------------|--------------------------------------|---------------------------------------|
+| 1. Fast      | every pull request                   | H2 golden tests, H6, H8 negative test |
+| 2. Polyglot  | pull requests touching any extension | H9 fixture, H5 mutation suite         |
+| 3. Corpus    | nightly and on a label               | H3 and H4 for each language           |
+| 4. Benchmark | nightly                              | H7 against baseline                   |
 
 Matrix: Bazel 8 and 9 with Bzlmod, plus Bazel 8 with legacy WORKSPACE (the polyglot fixture gets a WORKSPACE variant), on Linux and macOS; add Windows only if the open question says so.
 
@@ -173,14 +173,14 @@ Matrix: Bazel 8 and 9 with Bzlmod, plus Bazel 8 with legacy WORKSPACE (the polyg
 
 ### Risks and mitigations
 
-| Risk | Mitigation |
-| --- | --- |
-| Nested Bazel runs are slow or flaky | Pin Bazel version, share a remote cache, run corpora nightly rather than per pull request |
-| Corpus repos disappear or change | Pinned commits in forks of every corpus repository |
-| Benchmark noise hides regressions | Dedicated runner class, five runs, p95, 15% gate with a stored baseline |
-| Fixture drifts from real repositories | Seed fixture modules from corpus subsets and review them each quarter |
-| Extensions lack a stats flag | Small shared patch counted inside each language's performance work package |
-| Extension order changes output | Fix and document order; add a test that fails on reordering |
+| Risk                                  | Mitigation                                                                                |
+|---------------------------------------|-------------------------------------------------------------------------------------------|
+| Nested Bazel runs are slow or flaky   | Pin Bazel version, share a remote cache, run corpora nightly rather than per pull request |
+| Corpus repos disappear or change      | Pinned commits in forks of every corpus repository                                        |
+| Benchmark noise hides regressions     | Dedicated runner class, five runs, p95, 15% gate with a stored baseline                   |
+| Fixture drifts from real repositories | Seed fixture modules from corpus subsets and review them each quarter                     |
+| Extensions lack a stats flag          | Small shared patch counted inside each language's performance work package                |
+| Extension order changes output        | Fix and document order; add a test that fails on reordering                               |
 
 ### Definition of done
 
@@ -196,15 +196,15 @@ Aspect's extension generates `ts_project`, `npm_package` and `npm_link_all_packa
 
 ### Gap per criterion
 
-| ID | Gap today | Work | Done when |
-| --- | --- | --- | --- |
-| C1 | Edge cases unverified: tsconfig `paths` aliases, `package.json` `exports` and subpath imports, workspace-protocol packages, type-only `@types/*` deps, generated TS (protobuf, GraphQL codegen), CSS and asset imports | Build an edge-case fixture, fix each failure in the resolver, add `js_resolve` presets for common codegen outputs | Corpus builds with zero hand-added deps |
-| C2 | Incrementality claimed, not measured | Benchmark; add a parse cache keyed on file hash; confirm directory-scoped runs skip unchanged subtrees | C2 thresholds met at 10k packages |
-| C3 | Behaviour with wrapper macros around `ts_project` unknown | Verify `map_kind` and keep markers across all generated kinds; fix gaps | Mutation suite passes |
-| C4 | Drift detection is in a commercial product description; OSS path unconfirmed | Use the shared drift check; document it for the OSS binary | Stale BUILD turns CI red |
-| C5 | Available granularities unconfirmed | Confirm directory-level mode; add a per-tsconfig-boundary mode (*proposed*) because `ts_project` maps to one tsconfig; add per-file only if benchmarks show it pays | Mode matrix builds |
-| C6 | Test targets follow `js_test_files` globs; runner-specific rules (Jest, Vitest, Mocha) and bundler targets (Webpack, Vite, esbuild, Next.js) unconfirmed in the Aspect extension | Add a pluggable test-kind mapping, e.g. `js_test_runner jest` (*proposed*), emitting `jest_test` via `rules_jest`; evaluate porting BenchSci's bundler detection | Fixture per runner and bundler builds and runs |
-| C7 | Aspect's binary does not include Java or Kotlin | Include Aspect's JS extension in the shared source-built binary | C7 fixture passes |
+| ID | Gap today                                                                                                                                                                                                              | Work                                                                                                                                                                | Done when                                      |
+|----|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
+| C1 | Edge cases unverified: tsconfig `paths` aliases, `package.json` `exports` and subpath imports, workspace-protocol packages, type-only `@types/*` deps, generated TS (protobuf, GraphQL codegen), CSS and asset imports | Build an edge-case fixture, fix each failure in the resolver, add `js_resolve` presets for common codegen outputs                                                   | Corpus builds with zero hand-added deps        |
+| C2 | Incrementality claimed, not measured                                                                                                                                                                                   | Benchmark; add a parse cache keyed on file hash; confirm directory-scoped runs skip unchanged subtrees                                                              | C2 thresholds met at 10k packages              |
+| C3 | Behaviour with wrapper macros around `ts_project` unknown                                                                                                                                                              | Verify `map_kind` and keep markers across all generated kinds; fix gaps                                                                                             | Mutation suite passes                          |
+| C4 | Drift detection is in a commercial product description; OSS path unconfirmed                                                                                                                                           | Use the shared drift check; document it for the OSS binary                                                                                                          | Stale BUILD turns CI red                       |
+| C5 | Available granularities unconfirmed                                                                                                                                                                                    | Confirm directory-level mode; add a per-tsconfig-boundary mode (*proposed*) because `ts_project` maps to one tsconfig; add per-file only if benchmarks show it pays | Mode matrix builds                             |
+| C6 | Test targets follow `js_test_files` globs; runner-specific rules (Jest, Vitest, Mocha) and bundler targets (Webpack, Vite, esbuild, Next.js) unconfirmed in the Aspect extension                                       | Add a pluggable test-kind mapping, e.g. `js_test_runner jest` (*proposed*), emitting `jest_test` via `rules_jest`; evaluate porting BenchSci's bundler detection    | Fixture per runner and bundler builds and runs |
+| C7 | Aspect's binary does not include Java or Kotlin                                                                                                                                                                        | Include Aspect's JS extension in the shared source-built binary                                                                                                     | C7 fixture passes                              |
 
 ### Code changes
 
@@ -271,13 +271,13 @@ Five work packages deliver the four milestones, and every change ships behind a 
 
 #### Risk mitigations in this spec
 
-| Risk | Mitigation here |
-| --- | --- |
-| Parser or resolver cost at scale | WP3 cache and benchmark gate before WP1 merges |
-| Upstream rejection | Design issue per directive before coding; defaults unchanged |
-| Bazel 9 or Bzlmod gaps | WP0 check; CI matrix on Bazel 8 and 9 with Bzlmod, plus a WORKSPACE variant on Bazel 8 |
-| Guessed thresholds | WP0 resets them from measured numbers |
-| Windows | Out of scope unless the open questions say otherwise; add a Windows job only then |
+| Risk                             | Mitigation here                                                                        |
+|----------------------------------|----------------------------------------------------------------------------------------|
+| Parser or resolver cost at scale | WP3 cache and benchmark gate before WP1 merges                                         |
+| Upstream rejection               | Design issue per directive before coding; defaults unchanged                           |
+| Bazel 9 or Bzlmod gaps           | WP0 check; CI matrix on Bazel 8 and 9 with Bzlmod, plus a WORKSPACE variant on Bazel 8 |
+| Guessed thresholds               | WP0 resets them from measured numbers                                                  |
+| Windows                          | Out of scope unless the open questions say otherwise; add a Windows job only then      |
 
 #### Definition of done
 
@@ -297,15 +297,15 @@ Pick one base before any code. `rules_python`'s plugin is the community default 
 
 ### Gap per criterion
 
-| ID | Gap today | Work | Done when |
-| --- | --- | --- | --- |
+| ID | Gap today                                                                                                                                                                                     | Work                                                                                                                                                                        | Done when                                                |
+|----|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | C1 | Manifest is a manual step; likely weak spots: namespace packages, stub-only and `types-*` packages, extras, multiple pip hubs and Python versions, generated code (protobuf and gRPC outputs) | Layered resolver: first-party index, then manifest keyed per hub and version, then generated-code index, then `gazelle:resolve py` overrides; keep validation on by default | Corpus builds; import validation reports zero unresolved |
-| C2 | `modules_mapping` is slow at scale; parser cost unmeasured | Make `modules_mapping` one action per wheel plus a merge step so a dependency bump recomputes one wheel; benchmark and, if needed, batch parser calls | C2 thresholds met; single-wheel bump under 30 s |
-| C3 | Non-destructive by design; custom wrapper macros around `py_*` untested | Verify `map_kind` and keep markers for all three kinds; fix gaps | Mutation suite passes |
-| C4 | Manifest has a `.test` target; BUILD drift has none | Shared drift check plus the manifest test in one CI job | Stale BUILD or stale manifest turns CI red |
-| C5 | `package` and `project` modes exist; no per-file mode confirmed | Confirm; add `file` mode (*proposed*) so one changed module does not invalidate a whole package | Mode matrix builds |
-| C6 | Tests are files ending in `_test.py`; likely gaps: `test_*.py` and pytest conventions, `conftest.py` sharing, fixture data, pytest wrapper macros | Add configurable test file patterns (*proposed*), `conftest.py` as shared dep, `map_kind` for pytest macros, default `data` globs for test directories | Pytest fixture repo generates and passes |
-| C7 | Windows support uncertain; one-binary composition untested | Resolve the Windows issue or document the limit; include in shared binary | C7 fixture passes |
+| C2 | `modules_mapping` is slow at scale; parser cost unmeasured                                                                                                                                    | Make `modules_mapping` one action per wheel plus a merge step so a dependency bump recomputes one wheel; benchmark and, if needed, batch parser calls                       | C2 thresholds met; single-wheel bump under 30 s          |
+| C3 | Non-destructive by design; custom wrapper macros around `py_*` untested                                                                                                                       | Verify `map_kind` and keep markers for all three kinds; fix gaps                                                                                                            | Mutation suite passes                                    |
+| C4 | Manifest has a `.test` target; BUILD drift has none                                                                                                                                           | Shared drift check plus the manifest test in one CI job                                                                                                                     | Stale BUILD or stale manifest turns CI red               |
+| C5 | `package` and `project` modes exist; no per-file mode confirmed                                                                                                                               | Confirm; add `file` mode (*proposed*) so one changed module does not invalidate a whole package                                                                             | Mode matrix builds                                       |
+| C6 | Tests are files ending in `_test.py`; likely gaps: `test_*.py` and pytest conventions, `conftest.py` sharing, fixture data, pytest wrapper macros                                             | Add configurable test file patterns (*proposed*), `conftest.py` as shared dep, `map_kind` for pytest macros, default `data` globs for test directories                      | Pytest fixture repo generates and passes                 |
+| C7 | Windows support uncertain; one-binary composition untested                                                                                                                                    | Resolve the Windows issue or document the limit; include in shared binary                                                                                                   | C7 fixture passes                                        |
 
 ### Code changes
 
@@ -380,14 +380,14 @@ Six work packages deliver the five milestones. The first one produces a decision
 
 #### Risk mitigations in this spec
 
-| Risk | Mitigation here |
-| --- | --- |
-| Parser cost dominates | WP3 profiles before any resolver work merges |
-| Wrong base generator chosen | WP0 scorecard and written decision rule |
-| Upstream rejection | Design issue first; schema and directive changes are additive; old manifests keep working |
-| Bazel 9 or Bzlmod gaps | WP0 check; CI on Bazel 8 and 9, plus a WORKSPACE variant on Bazel 8 (pip hub names differ there, so the manifest keys must cover both) |
-| Guessed thresholds | WP0 resets them |
-| Windows | WP5 decision with a reproducing test |
+| Risk                        | Mitigation here                                                                                                                        |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Parser cost dominates       | WP3 profiles before any resolver work merges                                                                                           |
+| Wrong base generator chosen | WP0 scorecard and written decision rule                                                                                                |
+| Upstream rejection          | Design issue first; schema and directive changes are additive; old manifests keep working                                              |
+| Bazel 9 or Bzlmod gaps      | WP0 check; CI on Bazel 8 and 9, plus a WORKSPACE variant on Bazel 8 (pip hub names differ there, so the manifest keys must cover both) |
+| Guessed thresholds          | WP0 resets them                                                                                                                        |
+| Windows                     | WP5 decision with a reproducing test                                                                                                   |
 
 #### Definition of done
 
@@ -403,15 +403,15 @@ The `rules_jvm` extension generates `java_library`, `java_binary`, `java_test` a
 
 ### Gap per criterion
 
-| ID | Gap today | Work | Done when |
-| --- | --- | --- | --- |
-| C1 | Likely weak spots: classes produced by annotation processors (Dagger, AutoValue, Immutables, MapStruct, Lombok), `exports` inference for API types, packages split across targets, Bzlmod lockfile formats and multiple Maven repos, static and wildcard imports, protobuf-generated classes | Processor-aware resolution with a declared generated-class map (*proposed* directive), `exports` inference for types in public signatures, ambiguity diagnostics for split packages, Bzlmod lockfile reader | Strict-deps build passes with zero hand-added deps on corpus |
-| C2 | Each parse crosses into a separate JVM program | Long-lived parser process with batched requests; content-hash parse cache; benchmark | C2 thresholds met at 10k packages |
-| C3 | Custom `java_library` wrapper macros and attributes such as `plugins`, `javacopts`, `runtime_deps`, `visibility` unverified | `map_kind` and keep-marker audit across all generated kinds; never overwrite non-generated attributes | Mutation suite passes |
-| C4 | None built in; the lockfile has its own staleness check | Shared drift check plus a lockfile-pin check in the same CI job | Stale BUILD or stale lockfile turns CI red |
-| C5 | Package and module granularity; cycles need manual coarsening | Automatic strongly-connected-component merging: when packages form a cycle, emit one merged target and a warning naming the members; add per-file granularity (*proposed*) | Cyclic fixture generates a buildable repo with no directive edits |
-| C6 | Suite and per-file test modes exist; custom test macros, JUnit 5 runner settings, test resources and annotation-processor plugin attributes unconfirmed | Map test kinds through `map_kind`; derive `plugins` from the processor declaration; attach resources and `jvm_flags` defaults | Fixture per macro builds and runs |
-| C7 | Kotlin and Java may share directories | Define ownership for mixed directories; shared Maven and package index | C7 fixture passes |
+| ID | Gap today                                                                                                                                                                                                                                                                                    | Work                                                                                                                                                                                                        | Done when                                                         |
+|----|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| C1 | Likely weak spots: classes produced by annotation processors (Dagger, AutoValue, Immutables, MapStruct, Lombok), `exports` inference for API types, packages split across targets, Bzlmod lockfile formats and multiple Maven repos, static and wildcard imports, protobuf-generated classes | Processor-aware resolution with a declared generated-class map (*proposed* directive), `exports` inference for types in public signatures, ambiguity diagnostics for split packages, Bzlmod lockfile reader | Strict-deps build passes with zero hand-added deps on corpus      |
+| C2 | Each parse crosses into a separate JVM program                                                                                                                                                                                                                                               | Long-lived parser process with batched requests; content-hash parse cache; benchmark                                                                                                                        | C2 thresholds met at 10k packages                                 |
+| C3 | Custom `java_library` wrapper macros and attributes such as `plugins`, `javacopts`, `runtime_deps`, `visibility` unverified                                                                                                                                                                  | `map_kind` and keep-marker audit across all generated kinds; never overwrite non-generated attributes                                                                                                       | Mutation suite passes                                             |
+| C4 | None built in; the lockfile has its own staleness check                                                                                                                                                                                                                                      | Shared drift check plus a lockfile-pin check in the same CI job                                                                                                                                             | Stale BUILD or stale lockfile turns CI red                        |
+| C5 | Package and module granularity; cycles need manual coarsening                                                                                                                                                                                                                                | Automatic strongly-connected-component merging: when packages form a cycle, emit one merged target and a warning naming the members; add per-file granularity (*proposed*)                                  | Cyclic fixture generates a buildable repo with no directive edits |
+| C6 | Suite and per-file test modes exist; custom test macros, JUnit 5 runner settings, test resources and annotation-processor plugin attributes unconfirmed                                                                                                                                      | Map test kinds through `map_kind`; derive `plugins` from the processor declaration; attach resources and `jvm_flags` defaults                                                                               | Fixture per macro builds and runs                                 |
+| C7 | Kotlin and Java may share directories                                                                                                                                                                                                                                                        | Define ownership for mixed directories; shared Maven and package index                                                                                                                                      | C7 fixture passes                                                 |
 
 ### Code changes
 
@@ -491,14 +491,14 @@ Six work packages deliver the six milestones. The shared JVM core in WP1 is the 
 
 #### Risk mitigations in this spec
 
-| Risk | Mitigation here |
-| --- | --- |
-| Parser cost dominates | WP2 before any resolver work; benchmark gates merging |
-| Upstream rejection | Design issue before code; WP1 is behaviour-neutral and reviewable alone; new behaviour sits behind directives with unchanged defaults |
-| Bazel 9 or Bzlmod gaps | WP0 check; `LockfileReader` interface isolates the format; WORKSPACE variant on Bazel 8 |
-| Cycle merging design wrong | WP4 prototype before full build |
-| Kotlin blocked on the core | WP1 interfaces reviewed with the Kotlin plan; skeleton compile check in acceptance |
-| Guessed thresholds | WP0 resets them |
+| Risk                       | Mitigation here                                                                                                                       |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| Parser cost dominates      | WP2 before any resolver work; benchmark gates merging                                                                                 |
+| Upstream rejection         | Design issue before code; WP1 is behaviour-neutral and reviewable alone; new behaviour sits behind directives with unchanged defaults |
+| Bazel 9 or \Bzlmod gaps    | WP0 check; `LockfileReader` interface isolates the format; WORKSPACE variant on Bazel 8                                               |
+| Cycle merging design wrong | WP4 prototype before full build                                                                                                       |
+| Kotlin blocked on the core | WP1 interfaces reviewed with the Kotlin plan; skeleton compile check in acceptance                                                    |
+| Guessed thresholds         | WP0 resets them                                                                                                                       |
 
 #### Definition of done
 
@@ -514,25 +514,25 @@ Aspect's Kotlin extension, in the `aspect-cli` repo, targets `kt_jvm_library` an
 
 ### Decision to make first
 
-| Option | Pros | Cons |
-| --- | --- | --- |
-| A. Contribute to Aspect's extension | Existing code, a maintainer team, likely upstream path | Experimental state, unknown test depth, design not yet matching the shared JVM core |
+| Option                                                       | Pros                                                                                                           | Cons                                                                                 |
+|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| A. Contribute to Aspect's extension                          | Existing code, a maintainer team, likely upstream path                                                         | Experimental state, unknown test depth, design not yet matching the shared JVM core  |
 | B. New Kotlin extension on the shared JVM core (recommended) | Reuses Maven, package and cycle logic from Java, so C1, C2, C5 and C7 behave identically across both languages | New parser and Kotlin-specific resolver to write; must coordinate upstream placement |
-| C. Adopt the standalone project | Smallest start | Early stage, no Bzlmod, less maintained |
+| C. Adopt the standalone project                              | Smallest start                                                                                                 | Early stage, no Bzlmod, less maintained                                              |
 
 Run the baseline audit on A and C against the Kotlin corpus first. If either builds three corpus repos with under 10% hand fixes, prefer extending it; otherwise take option B and borrow ideas from both.
 
 ### Gap per criterion
 
-| ID | Gap today | Work | Done when |
-| --- | --- | --- | --- |
+| ID | Gap today                                                                                                                                                                                                                                                                             | Work                                                                                                                                                                                             | Done when                                                          |
+|----|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
 | C1 | Kotlin-specific resolution is unbuilt: same-package files with no import, top-level functions and properties compiled to `FileNameKt` classes, extension functions, typealiases, `import ... as` aliases, star imports, Java interop in mixed targets, implicit standard-library deps | Declaration index per file (package, top-level symbols, typealiases); resolver using the shared JVM core's Maven and package indexes; implicit-stdlib handling; mixed Java/Kotlin target support | Strict-deps style build passes on corpus with zero hand-added deps |
-| C2 | No performance data | Parser choice benchmarked: in-process tree-sitter Kotlin versus the Kotlin compiler's syntax tree in a side process; hash-keyed parse cache; worker-count control | C2 thresholds met at 10k packages |
-| C3 | Untested for `kt_*` macros | `map_kind`, keep markers and attribute preservation for all generated kinds | Mutation suite passes |
-| C4 | None | Shared drift check plus lockfile check | Stale BUILD turns CI red |
-| C5 | Library per directory only, if that | Per-package, per-module and per-file modes shared with Java, including automatic cycle merging | Mode matrix builds; cyclic fixture builds |
-| C6 | Compiler plugins and symbol processors unmodelled: kotlinx.serialization, Compose compiler, KSP, kapt (Hilt, Room, Moshi codegen); test frameworks (JUnit 5, Kotest) | Plugin declarations map to `rules_kotlin` plugin attributes; generated-class map shared with Java; test naming and kind rules | Fixture per plugin and framework builds and runs |
-| C7 | Java and Kotlin may share directories and the Maven index | Ownership rules for mixed directories; one binary | C7 fixture passes |
+| C2 | No performance data                                                                                                                                                                                                                                                                   | Parser choice benchmarked: in-process tree-sitter Kotlin versus the Kotlin compiler's syntax tree in a side process; hash-keyed parse cache; worker-count control                                | C2 thresholds met at 10k packages                                  |
+| C3 | Untested for `kt_*` macros                                                                                                                                                                                                                                                            | `map_kind`, keep markers and attribute preservation for all generated kinds                                                                                                                      | Mutation suite passes                                              |
+| C4 | None                                                                                                                                                                                                                                                                                  | Shared drift check plus lockfile check                                                                                                                                                           | Stale BUILD turns CI red                                           |
+| C5 | Library per directory only, if that                                                                                                                                                                                                                                                   | Per-package, per-module and per-file modes shared with Java, including automatic cycle merging                                                                                                   | Mode matrix builds; cyclic fixture builds                          |
+| C6 | Compiler plugins and symbol processors unmodelled: kotlinx.serialization, Compose compiler, KSP, kapt (Hilt, Room, Moshi codegen); test frameworks (JUnit 5, Kotest)                                                                                                                  | Plugin declarations map to `rules_kotlin` plugin attributes; generated-class map shared with Java; test naming and kind rules                                                                    | Fixture per plugin and framework builds and runs                   |
+| C7 | Java and Kotlin may share directories and the Maven index                                                                                                                                                                                                                             | Ownership rules for mixed directories; one binary                                                                                                                                                | C7 fixture passes                                                  |
 
 ### Code changes
 
@@ -612,15 +612,15 @@ Six work packages deliver the six milestones, written for option B (a new extens
 
 #### Risk mitigations in this spec
 
-| Risk | Mitigation here |
-| --- | --- |
-| Build-or-extend decision slips | WP0 time-box and written decision rule |
-| Upstream placement unresolved | Proposal in WP0; development in a repo laid out for later transfer; additive directives |
-| Parser cost or build complexity | WP1 benchmark before resolver work; cgo impact weighed explicitly |
-| No Kotlin strict-deps check | `kt-depcheck` oracle in WP2 |
-| Same-package resolution over-approximates | Extra-dep metric tracked from the first corpus run |
-| Bazel 9 or Bzlmod gaps | WP0 check; Bzlmod built in from WP5 start; CI matrix, plus a WORKSPACE variant on Bazel 8 where the corpus repository supports it |
-| Guessed thresholds | WP0 resets them |
+| Risk                                      | Mitigation here                                                                                                                   |
+|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| Build-or-extend decision slips            | WP0 time-box and written decision rule                                                                                            |
+| Upstream placement unresolved             | Proposal in WP0; development in a repo laid out for later transfer; additive directives                                           |
+| Parser cost or build complexity           | WP1 benchmark before resolver work; cgo impact weighed explicitly                                                                 |
+| No Kotlin strict-deps check               | `kt-depcheck` oracle in WP2                                                                                                       |
+| Same-package resolution over-approximates | Extra-dep metric tracked from the first corpus run                                                                                |
+| Bazel 9 or Bzlmod gaps                    | WP0 check; Bzlmod built in from WP5 start; CI matrix, plus a WORKSPACE variant on Bazel 8 where the corpus repository supports it |
+| Guessed thresholds                        | WP0 resets them                                                                                                                   |
 
 #### Definition of done
 
@@ -662,14 +662,14 @@ Total sizing is about 24–33 engineer-weeks across the four languages, not coun
 
 ### Risks
 
-| Risk | Effect | Mitigation |
-| --- | --- | --- |
-| Kotlin option decision slips or upstream placement is unresolved | Kotlin start delayed | Time-box the audit to 1.5 weeks; build in a repo you control and upstream later |
-| Parser cost dominates at 10k packages in Java or Kotlin | C2 missed | Persistent parser and cache are already in plan; benchmark before building resolvers |
-| Upstream maintainers reject directive or design changes | Fork maintenance | Open design issues with each project before coding; keep changes behind directives with unchanged defaults |
-| Bazel 9 or Bzlmod incompatibilities in the Java or Kotlin extensions | Rework | Check in each baseline audit |
-| Thresholds are guesses | False pass or fail | Re-set after the first benchmark and record why |
-| Windows hosts | Plugin gaps, as seen in Python | Decide scope up front; add a Windows CI job only if in scope |
+| Risk                                                                 | Effect                         | Mitigation                                                                                                 |
+|----------------------------------------------------------------------|--------------------------------|------------------------------------------------------------------------------------------------------------|
+| Kotlin option decision slips or upstream placement is unresolved     | Kotlin start delayed           | Time-box the audit to 1.5 weeks; build in a repo you control and upstream later                            |
+| Parser cost dominates at 10k packages in Java or Kotlin              | C2 missed                      | Persistent parser and cache are already in plan; benchmark before building resolvers                       |
+| Upstream maintainers reject directive or design changes              | Fork maintenance               | Open design issues with each project before coding; keep changes behind directives with unchanged defaults |
+| Bazel 9 or Bzlmod incompatibilities in the Java or Kotlin extensions | Rework                         | Check in each baseline audit                                                                               |
+| Thresholds are guesses                                               | False pass or fail             | Re-set after the first benchmark and record why                                                            |
+| Windows hosts                                                        | Plugin gaps, as seen in Python | Decide scope up front; add a Windows CI job only if in scope                                               |
 
 ### Decisions so far
 
