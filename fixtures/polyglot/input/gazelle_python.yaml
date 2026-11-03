@@ -1,0 +1,5 @@
+manifest:
+  modules_mapping: {}
+  pip_repository:
+    name: pip
+integrity: none

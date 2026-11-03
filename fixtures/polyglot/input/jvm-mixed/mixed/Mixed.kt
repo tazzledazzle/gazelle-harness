@@ -1,0 +1,6 @@
+package mixed
+
+
+class Mixed {
+
+}

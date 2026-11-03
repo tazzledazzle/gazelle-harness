@@ -1,0 +1,5 @@
+module(name = 'polyglot_fixture', version = '0.0.0')
+bazel_dep(name = 'rules_java', version = '9.6.1')
+bazel_dep(name = 'rules_python', version = '2.4.3')
+python = use_extension('@rules_python//python/extensions:python.bzl', 'python')
+python.toolchain(python_version = '3.12', is_default = True)
