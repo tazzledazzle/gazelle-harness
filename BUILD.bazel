@@ -1,18 +1,22 @@
-load('@gazelle//:def.bzl', 'gazelle', 'gazelle_binary')
+# gazelle:exclude .corpus
+# gazelle:exclude golden/cases
+# gazelle:exclude fixtures
+# gazelle:exclude bench_results
+load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
 
 # One Gazelle binary that combines every language extension under test (C7).
 # Start with Go and proto, which ship inside Gazelle; step 1b adds the others.
 gazelle_binary(
-    name = 'gazelle_polyglot',
+    name = "gazelle_polyglot",
     languages = [
-        '@gazelle//language/proto',  # proto first: other languages resolve against proto rules
-        '@gazelle//language/go',
+        "@gazelle//language/proto",  # proto first: other languages resolve against proto rules
+        "@gazelle//language/go",
     ],
-    visibility = ['//visibility:public'],
+    visibility = ["//visibility:public"],
 )
 
 # Convenience runner: `bazel run //:gazelle` regenerates BUILD files in this repo
 gazelle(
-    name = 'gazelle',
-    gazelle = ':gazelle_polyglot',
+    name = "gazelle",
+    gazelle = ":gazelle_polyglot",
 )
