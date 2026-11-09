@@ -17,8 +17,8 @@ import sys
 import tempfile
 import time
 
-from common import ROOT, gazelle_bin, load_json, save_json
 import synth
+from common import ROOT, gazelle_bin, load_json, save_json
 
 
 def p95(values):

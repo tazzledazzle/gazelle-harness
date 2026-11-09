@@ -10,8 +10,10 @@ sys.path.insert(0, str(ROOT / 'golden'))
 import run_golden  # noqa: E402
 from support import EnvPatch, make_fake_gazelle  # noqa: E402
 
+DEFAULT_EXPECTED = 'go_library(name = "a")' + chr(10)
 
-def make_case(base, expected='go_library(name = "a")' + chr(10), args=None):
+
+def make_case(base, expected=DEFAULT_EXPECTED, args=None):
     """A case with one Go package a; the fake gazelle should generate a/BUILD.bazel for it."""
     case = pathlib.Path(base) / 'case'
     (case / 'input' / 'a').mkdir(parents=True)

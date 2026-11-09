@@ -83,7 +83,8 @@ def write_summary(path, rows):
     """Append a markdown table of the results to path (CI points this at $GITHUB_STEP_SUMMARY)."""
     failed = sum(1 for ok, _, _ in rows if not ok)
     lines = ['### Gate: ' + ('PASS' if not failed else str(failed) + ' failing'), '', '| Result | Criterion | Detail |', '|---|---|---|']
-    lines += ['| ' + ('PASS' if ok else '**FAIL**') + ' | ' + criterion + ' | ' + detail.replace('|', '\\|') + ' |' for ok, criterion, detail in rows]
+    for ok, criterion, detail in rows:
+        lines.append('| ' + ('PASS' if ok else '**FAIL**') + ' | ' + criterion + ' | ' + detail.replace('|', '\\|') + ' |')
     with open(path, 'a', encoding='utf-8') as f:
         f.write(chr(10).join(lines) + chr(10))
 

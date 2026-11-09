@@ -12,8 +12,8 @@ import re
 import shutil
 import sys
 
-from common import ROOT, gazelle_bin, load_json, run, save_json
 import corpus_fetch
+from common import ROOT, gazelle_bin, load_json, run, save_json
 
 
 def prepare_workspace(entry, base):

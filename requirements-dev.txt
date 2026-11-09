@@ -1,0 +1,4 @@
+# Linters used by scripts/lint.sh and the CI lint job; the harness itself needs only the standard library.
+ruff==0.17.4
+shellcheck-py==0.11.0.1
+actionlint-py==1.7.12.25

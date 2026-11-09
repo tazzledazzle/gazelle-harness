@@ -9,8 +9,8 @@ import pathlib
 import sys
 import tempfile
 
-from common import ROOT, gazelle_bin, run
 import mutate  # reuses prepare_workspace and regenerate
+from common import ROOT, gazelle_bin, run
 
 
 def main():

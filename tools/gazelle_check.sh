@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Usage: tools/gazelle_check.sh [workspace-dir]
 # Exit 0 = clean, 1 = BUILD files are stale (drift), 2 = Gazelle itself failed.
+set -uo pipefail                                              # no -e: every exit status below is handled explicitly
 WS="${1:-.}"                                                  # directory to check; default current
 : "${GAZELLE_BIN:?set GAZELLE_BIN (source scripts/env.sh)}"   # refuse to run without a binary
 STDERR_FILE="$(mktemp)"                                       # warnings go here, kept out of the diff
+trap 'rm -f "$STDERR_FILE"' EXIT                              # the file used to be left behind on every run
 # diff mode prints what WOULD change and writes nothing; -repo_root pins the root explicitly
 DIFF="$(cd "$WS" && "$GAZELLE_BIN" -mode=diff -repo_root="$PWD" 2>"$STDERR_FILE")"
 STATUS=$?

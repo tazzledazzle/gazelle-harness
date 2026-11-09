@@ -8,3 +8,8 @@ updates:
     groups:
       actions:
         patterns: ['*']
+  # Keeps the linters pinned in requirements-dev.txt current.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly

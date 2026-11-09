@@ -20,7 +20,8 @@ class GateTest(unittest.TestCase):
     def test_c2_regression_against_baseline(self):
         limits = {'max_noop_seconds': 10, 'max_one_file_seconds': 2, 'max_regression_pct': 15,
                   'shared_runner_regression_pct': 50, 'regression_floor_seconds': 0.25}
-        phase = lambda v: {'p95': v}
+        def phase(v):
+            return {'p95': v}
         base = {'py-100': {'packages': 100, 'cold': phase(10), 'noop': phase(1), 'one_file': phase(1)}}
         slow = {'py-100': {'packages': 100, 'cold': phase(12), 'noop': phase(1), 'one_file': phase(1)}}
         rows = gate.check_c2(limits, slow, base)
@@ -48,7 +49,8 @@ class GateTest(unittest.TestCase):
 
     @staticmethod
     def entry(cold, noop=1, one_file=1, packages=1000):
-        phase = lambda v: {'p95': v}
+        def phase(v):
+            return {'p95': v}
         return {'packages': packages, 'cold': phase(cold), 'noop': phase(noop), 'one_file': phase(one_file)}
 
     def test_c2_shared_runner_tolerates_noise_that_dedicated_rejects(self):

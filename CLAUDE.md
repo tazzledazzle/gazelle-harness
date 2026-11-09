@@ -60,18 +60,26 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
 ## Build & Test
 
-_Add your build and test commands here_
-
 ```bash
-# Example:
-# npm install
-# npm test
+source scripts/env.sh                 # build //:gazelle_polyglot, export GAZELLE_BIN
+bash scripts/ci_local.sh              # manifest check, unit tests, golden, fixture, mutation, ordering
+python3 -m unittest discover -s tests # unit tests only (no Bazel; drift tests skip without GAZELLE_BIN)
+bash scripts/lint.sh                  # ruff, shellcheck, actionlint
+python3 tools/validate_manifest.py    # corpus manifest is complete and pinned
 ```
+
+Run tools as scripts (`python3 tools/x.py`), not with `python3 -I`: they import `common` from their own directory.
 
 ## Architecture Overview
 
-_Add a brief overview of your project architecture_
+Plain Python scripts (standard library only) drive a polyglot Gazelle binary (`//:gazelle_polyglot`). `tools/gate.py` turns
+corpus, benchmark and mutation results into pass/fail using `thresholds.json`. `tests/support.py` provides fake gazelle and
+bazel executables so the runners can be tested without Bazel. See README.md and docs/specs/ for the criteria (C1-C7).
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+- Tests live in `tests/`, use `unittest`, and must not need network or Bazel unless skipped on a missing `GAZELLE_BIN`.
+- Every GitHub Action is pinned to a full commit SHA and every job has `timeout-minutes` (enforced by `tests/test_ci_workflow.py`).
+- A gate criterion listed in `--require` must produce rows; a missing measurement fails, it never passes silently.
+- Changing `thresholds.json`, `bench_results/baseline.json` or `corpus/manifest.json` changes what CI accepts: explain why in the PR.
+- Decisions that are hard to reverse go in `docs/decisions/`.

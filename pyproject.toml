@@ -1,0 +1,13 @@
+# Tooling configuration only: the harness itself is plain scripts under tools/ and golden/ (standard library only).
+[tool.ruff]
+line-length = 140
+target-version = "py312"  # CI runs Python 3.12
+extend-exclude = [".corpus", "bazel-*", "fixtures", "golden/cases"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes (unused names, undefined names), I: import order, B: likely bugs
+select = ["E", "F", "W", "B", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests put tools/ and golden/ on sys.path before importing them, so imports cannot sit at the top
+"tests/*" = ["E402"]

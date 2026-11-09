@@ -12,8 +12,8 @@ import random
 import sys
 import tempfile
 
-from common import gazelle_bin
 import mutate
+from common import gazelle_bin
 
 
 def main():
@@ -46,7 +46,8 @@ def main():
         if expected.get(rel) != got.get(rel):
             problems += 1
             print('DIFF ' + rel)
-            print(''.join(difflib.unified_diff((expected.get(rel) or '').splitlines(True), (got.get(rel) or '').splitlines(True), 'whole/' + rel, 'scoped/' + rel)))
+            want, have = (expected.get(rel) or ''), (got.get(rel) or '')
+            print(''.join(difflib.unified_diff(want.splitlines(True), have.splitlines(True), 'whole/' + rel, 'scoped/' + rel)))
     print('same output' if not problems else str(problems) + ' files differ')
     return 1 if problems else 0
 
