@@ -5,3 +5,5 @@ common --noenable_workspace
 test --test_output=errors
 # Reuse downloaded artifacts across clean builds
 build --disk_cache=~/.cache/bazel-disk
+# Per-developer overrides (for example --override_module for a local gazelle-kotlin checkout)
+try-import %workspace%/.bazelrc.user

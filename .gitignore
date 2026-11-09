@@ -15,3 +15,4 @@ bench_results/*
 *.db
 .beads-credential-key
 .beads/proxieddb/
+.bazelrc.user
