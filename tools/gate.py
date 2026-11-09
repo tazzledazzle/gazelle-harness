@@ -3,6 +3,10 @@
 
 Usage: python3 tools/gate.py [--corpus-glob '.corpus/*/results.json'] [--bench bench_results/bench.json]
                              [--baseline bench_results/baseline.json] [--mutations bench_results/mutations.json]
+                             [--manifest corpus/manifest.json] [--require C1 C2 C3]
+
+A criterion listed in --require must produce at least one row, so a missing measurement fails the gate
+instead of passing silently. C1 also fails for any corpus repo that failed to run or has no result file.
 """
 import argparse
 import glob
@@ -16,14 +20,31 @@ def load_optional(path):
     return load_json(path) if path and pathlib.Path(path).exists() else None
 
 
-def check_c1(limits, corpus_results):
+def failed_stage(result):
+    """Name the first pipeline stage that failed in a corpus result, for the failure message."""
+    for stage in ('gazelle', 'build', 'test'):
+        if result.get(stage, {}).get('exit', 0) != 0:
+            return stage
+    return 'unknown'
+
+
+def check_c1(limits, corpus_results, expected_ids=None):
+    """One row per corpus repo: failed runs, missing results and missing dependency diffs all fail."""
     rows = []
+    seen = set()
     for r in corpus_results:
+        seen.add(r['id'])
+        if not r.get('passed'):  # a red build or test is a failure even though it has no dependency diff
+            rows.append((False, 'C1', r['id'] + ': corpus run failed at ' + failed_stage(r)))
+            continue
         d = r.get('depdiff')
-        if not d:
-            continue  # this run did not compute a dependency diff
+        if not d:  # the nightly run always passes --depdiff, so its absence means the check did not happen
+            rows.append((False, 'C1', r['id'] + ': no dependency diff in results'))
+            continue
         ok = d['missing'] <= limits['max_missing_edges'] and d['extra_rate'] <= limits['max_extra_rate']
         rows.append((ok, 'C1', r['id'] + ': missing=' + str(d['missing']) + ' extra_rate=' + str(round(d['extra_rate'], 4))))
+    for missing_id in sorted(set(expected_ids or []) - seen):  # a repo that never reported is not a pass
+        rows.append((False, 'C1', missing_id + ': no results file (job skipped, crashed or artifact missing)'))
     return rows
 
 
@@ -56,12 +77,18 @@ def main():
     parser.add_argument('--bench', default=str(ROOT / 'bench_results' / 'bench.json'))
     parser.add_argument('--baseline', default=str(ROOT / 'bench_results' / 'baseline.json'))
     parser.add_argument('--mutations', default=str(ROOT / 'bench_results' / 'mutations.json'))
+    parser.add_argument('--manifest', default=str(ROOT / 'corpus' / 'manifest.json'))  # source of expected corpus ids
+    parser.add_argument('--require', nargs='*', default=[], choices=['C1', 'C2', 'C3'])
     args = parser.parse_args()
     limits = load_json(args.thresholds)
     corpus = [load_json(p) for p in sorted(glob.glob(args.corpus_glob))]
-    rows = (check_c1(limits['C1'], corpus)
+    expected = [e['id'] for e in load_json(args.manifest)['repos']] if 'C1' in args.require else None
+    rows = (check_c1(limits['C1'], corpus, expected)
             + check_c2(limits['C2'], load_optional(args.bench), load_optional(args.baseline))
             + check_c3(limits['C3'], load_optional(args.mutations)))
+    for criterion in args.require:  # a required criterion with no rows means its measurements never arrived
+        if not any(row[1] == criterion for row in rows):
+            rows.append((False, criterion, 'required but no measurements found'))
     for ok, criterion, detail in rows:
         print(('PASS' if ok else 'FAIL') + '  ' + criterion + '  ' + detail)
     if not rows:

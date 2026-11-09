@@ -111,4 +111,4 @@ jobs:
           json.dump(merged, open('bench_results/bench.json', 'w'))
           EOF
       - name: Gate
-        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json'
+        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json' --require C1 C2
