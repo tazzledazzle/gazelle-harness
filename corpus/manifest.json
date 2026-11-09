@@ -1,5 +1,5 @@
 {
-  "fork_owner": "REPLACE_WITH_YOUR_GITHUB_ORG",
+  "fork_owner": "tazzledazzle",
   "repos": [
     {
       "bazel_version": "",
@@ -174,12 +174,16 @@
       "gazelle_directives": [],
       "id": "bazel-examples-python",
       "language": "python",
-      "notes": "same fork as the TypeScript entry",
+      "notes": "one Bazel workspace of many unrelated examples; only the Python ones are stripped and built. Other examples keep their BUILD files. Same upstream and commit as bazel-examples-ts",
       "strip_dirs": [
-        "REPLACE_AFTER_INSPECTING"
+        "py_mypy",
+        "py_mypy/*",
+        "oci_python_image",
+        "oci_python_image/*"
       ],
       "targets": [
-        "//..."
+        "//py_mypy/...",
+        "//oci_python_image/..."
       ],
       "upstream": "https://github.com/aspect-build/bazel-examples"
     },
@@ -231,12 +235,28 @@
       "gazelle_directives": [],
       "id": "bazel-examples-ts",
       "language": "ts",
-      "notes": "React, Next.js, NestJS, Vue, Jest examples",
+      "notes": "Jest, NestJS, Node apps, npm packages, Qwik and Prisma examples; other examples keep their BUILD files. Same upstream and commit as bazel-examples-python. Verify on the first run that the retained hand-written rules still load",
       "strip_dirs": [
-        "REPLACE_AFTER_INSPECTING"
+        "jest",
+        "jest/*",
+        "nestjs",
+        "nestjs/*",
+        "nodejs_apps",
+        "nodejs_apps/*",
+        "npm_packages",
+        "npm_packages/*",
+        "qwik",
+        "qwik/*",
+        "prisma",
+        "prisma/*"
       ],
       "targets": [
-        "//..."
+        "//jest/...",
+        "//nestjs/...",
+        "//nodejs_apps/...",
+        "//npm_packages/...",
+        "//qwik/...",
+        "//prisma/..."
       ],
       "upstream": "https://github.com/aspect-build/bazel-examples"
     }
