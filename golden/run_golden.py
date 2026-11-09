@@ -69,7 +69,17 @@ def check_case(gazelle, case, update):
         if first.returncode != 0:
             return ['gazelle exited ' + str(first.returncode) + ': ' + first.stderr]
         got = collect_builds(scratch)
+        # Idempotence: running again on its own output must change nothing. Checked before --update writes
+        # anything, so a non-idempotent extension can never have its output recorded as the expectation.
+        second = run_gazelle(gazelle, scratch, read_args(case))
+        idempotence = []
+        if second.returncode != 0:
+            idempotence.append('second run exited ' + str(second.returncode) + ': ' + second.stderr)
+        elif collect_builds(scratch) != got:
+            idempotence.append('second run changed the output (not idempotent)')
         if update:  # --update rewrites the expectations from the actual output; review the git diff
+            if idempotence:
+                return idempotence
             exp_root = case / 'expected'
             if exp_root.exists():
                 shutil.rmtree(exp_root)
@@ -87,12 +97,7 @@ def check_case(gazelle, case, update):
                 failures.append('unexpected generated file: ' + name)
             elif want[name] != got[name]:
                 failures.append('content differs: ' + name + chr(10) + diff_text(name, want[name], got[name]))
-        # Idempotence: running again on its own output must change nothing
-        second = run_gazelle(gazelle, scratch, read_args(case))
-        if second.returncode == 0 and collect_builds(scratch) != got:
-            failures.append('second run changed the output (not idempotent)')
-        return failures
-    return None
+        return failures + idempotence
 
 
 def main():

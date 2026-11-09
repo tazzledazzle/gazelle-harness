@@ -13,20 +13,34 @@ on:
         type: boolean
         default: false
 
-env:
-  # bazelisk installed under the name bazel, so .bazelversion is honoured
-  BAZELISK_URL: https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+# Least privilege: every job only reads the repository. Add job-level permissions if a job ever needs more.
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its superseded run; main and nightly runs always finish.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Third-party actions are pinned to full commit SHAs (the comment names the release); Dependabot keeps them current.
+# setup-bazel installs bazelisk as `bazel`, so .bazelversion is honoured, and restores the bazelisk, repository and disk caches.
 
 jobs:
   checks:  # stages 1 and 2: every pull request
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: '3.12'
-      - name: Install bazelisk as bazel
-        run: sudo curl -fsSL -o /usr/local/bin/bazel "$BAZELISK_URL" && sudo chmod +x /usr/local/bin/bazel
+      - uses: bazel-contrib/setup-bazel@104e3eea9447cdaa4b00d0fb46191a3985d26ab3  # 0.19.1
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}-checks
+          repository-cache: true
       - name: Fast checks and polyglot fixture
         run: bash scripts/ci_local.sh
         env:
@@ -42,12 +56,23 @@ jobs:
       matrix:
         repo: [dagger, grpc-java, gerrit, grpc-kotlin, bazel-diff, rules-kotlin-examples, ray, pigweed, bazel-examples-python, angular-components, angular-cli, bazel-examples-ts]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: '3.12'
-      - name: Install bazelisk as bazel
-        run: sudo curl -fsSL -o /usr/local/bin/bazel "$BAZELISK_URL" && sudo chmod +x /usr/local/bin/bazel
+      - uses: bazel-contrib/setup-bazel@104e3eea9447cdaa4b00d0fb46191a3985d26ab3  # 0.19.1
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}-corpus-${{ matrix.repo }}
+          repository-cache: true
+      - name: Cache the pinned corpus checkout  # corpus_fetch.py keeps a git cache here, so reruns skip the clone
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        with:
+          path: ~/.cache/gazelle-harness/git/${{ matrix.repo }}
+          key: corpus-git-${{ matrix.repo }}-${{ hashFiles('corpus/manifest.json') }}
+          restore-keys: corpus-git-${{ matrix.repo }}-
       - name: Let git read private forks
         env:
           CORPUS_TOKEN: ${{ secrets.CORPUS_TOKEN }}
@@ -59,7 +84,10 @@ jobs:
         run: |
           source scripts/env.sh
           python3 tools/corpus_run.py --id ${{ matrix.repo }} --gazelle "$GAZELLE_BIN" --depdiff
-      - uses: actions/upload-artifact@v4
+      - name: Remove the token from git config
+        if: always()  # runs even when the corpus run fails
+        run: rm -f ~/.gitconfig
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: always()
         with:
           name: corpus-${{ matrix.repo }}
@@ -72,23 +100,28 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: checks
     runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}  # set the BENCH_RUNNER variable to a dedicated runner label
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         lang: [python, java]
         packages: [1000, 10000]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: '3.12'
-      - name: Install bazelisk as bazel
-        run: sudo curl -fsSL -o /usr/local/bin/bazel "$BAZELISK_URL" && sudo chmod +x /usr/local/bin/bazel
+      - uses: bazel-contrib/setup-bazel@104e3eea9447cdaa4b00d0fb46191a3985d26ab3  # 0.19.1
+        with:
+          bazelisk-cache: true
+          repository-cache: true  # only the gazelle binary is built here, so no disk cache
       - name: Benchmark
         run: |
           source scripts/env.sh
           python3 tools/bench.py --lang ${{ matrix.lang }} --packages ${{ matrix.packages }} --gazelle "$GAZELLE_BIN" --runs 10 ${{ inputs.record_baseline && '--baseline' || '' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: bench-${{ matrix.lang }}-${{ matrix.packages }}
           path: |
@@ -100,12 +133,15 @@ jobs:
     if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     needs: [corpus, bench]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: '3.12'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         with:
           path: artifacts
       - name: Merge benchmark files
@@ -130,11 +166,12 @@ jobs:
           EOF
       - name: Upload recorded baseline (commit it as bench_results/baseline.json)
         if: inputs.record_baseline
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: baseline-merged
           path: bench_results/baseline.json
       - name: Gate
         if: '!inputs.record_baseline'  # a baseline-recording run has nothing to compare against
-        # --shared-runner widens the regression tolerance unless BENCH_RUNNER names a dedicated runner
-        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json' --require C1 C2 ${{ vars.BENCH_RUNNER == '' && '--shared-runner' || '' }}
+        # --shared-runner widens the regression tolerance unless BENCH_RUNNER names a dedicated runner;
+        # --summary puts the PASS/FAIL table on the run's summary page
+        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json' --require C1 C2 --summary "$GITHUB_STEP_SUMMARY" ${{ vars.BENCH_RUNNER == '' && '--shared-runner' || '' }}

@@ -3,7 +3,7 @@
 
 Usage: python3 tools/gate.py [--corpus-glob '.corpus/*/results.json'] [--bench bench_results/bench.json]
                              [--baseline bench_results/baseline.json] [--mutations bench_results/mutations.json]
-                             [--manifest corpus/manifest.json] [--require C1 C2 C3] [--shared-runner]
+                             [--manifest corpus/manifest.json] [--require C1 C2 C3] [--shared-runner] [--summary FILE]
 
 A criterion listed in --require must produce at least one row, so a missing measurement fails the gate
 instead of passing silently. C1 also fails for any corpus repo that failed to run or has no result file.
@@ -79,6 +79,15 @@ def check_c3(limits, mutations):
     return [(failures <= limits['max_mutation_failures'], 'C3', 'mutation failures=' + str(failures))]
 
 
+def write_summary(path, rows):
+    """Append a markdown table of the results to path (CI points this at $GITHUB_STEP_SUMMARY)."""
+    failed = sum(1 for ok, _, _ in rows if not ok)
+    lines = ['### Gate: ' + ('PASS' if not failed else str(failed) + ' failing'), '', '| Result | Criterion | Detail |', '|---|---|---|']
+    lines += ['| ' + ('PASS' if ok else '**FAIL**') + ' | ' + criterion + ' | ' + detail.replace('|', '\\|') + ' |' for ok, criterion, detail in rows]
+    with open(path, 'a', encoding='utf-8') as f:
+        f.write(chr(10).join(lines) + chr(10))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--thresholds', default=str(ROOT / 'thresholds.json'))
@@ -88,6 +97,7 @@ def main():
     parser.add_argument('--mutations', default=str(ROOT / 'bench_results' / 'mutations.json'))
     parser.add_argument('--manifest', default=str(ROOT / 'corpus' / 'manifest.json'))  # source of expected corpus ids
     parser.add_argument('--shared-runner', action='store_true')  # benchmarks ran on a shared CI runner: wider tolerance
+    parser.add_argument('--summary')  # file to append a markdown results table to
     parser.add_argument('--require', nargs='*', default=[], choices=['C1', 'C2', 'C3'])
     args = parser.parse_args()
     limits = load_json(args.thresholds)
@@ -99,6 +109,8 @@ def main():
     for criterion in args.require:  # a required criterion with no rows means its measurements never arrived
         if not any(row[1] == criterion for row in rows):
             rows.append((False, criterion, 'required but no measurements found'))
+    if args.summary:
+        write_summary(args.summary, rows)
     for ok, criterion, detail in rows:
         print(('PASS' if ok else 'FAIL') + '  ' + criterion + '  ' + detail)
     if not rows:

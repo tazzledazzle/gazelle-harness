@@ -1,0 +1,7 @@
+# Everything needs a review from the maintainer; add narrower rules below as contributors join.
+*                       @tazzledazzle
+# Changes here alter what the gate accepts, so they are called out explicitly.
+/thresholds.json        @tazzledazzle
+/bench_results/         @tazzledazzle
+/corpus/manifest.json   @tazzledazzle
+/.github/               @tazzledazzle

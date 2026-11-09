@@ -71,6 +71,15 @@ class GateTest(unittest.TestCase):
         self.assertEqual([r[0] for r in rows], [False])
         self.assertIn('no baseline', rows[0][2])
 
+    def test_summary_table_lists_every_row_and_escapes_pipes(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = pathlib.Path(d) / 'summary.md'
+            gate.write_summary(path, [(True, 'C1', 'a: ok'), (False, 'C2', 'b: slow | really')])
+            text = path.read_text()
+        self.assertIn('### Gate: 1 failing', text)
+        self.assertIn('| PASS | C1 | a: ok |', text)
+        self.assertIn('| **FAIL** | C2 | b: slow \\| really |', text)
+
 
 class GateMainTest(unittest.TestCase):
     """Run the CLI end to end against temporary files."""
