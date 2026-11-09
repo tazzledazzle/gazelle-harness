@@ -3,7 +3,7 @@
 
 Usage: python3 tools/gate.py [--corpus-glob '.corpus/*/results.json'] [--bench bench_results/bench.json]
                              [--baseline bench_results/baseline.json] [--mutations bench_results/mutations.json]
-                             [--manifest corpus/manifest.json] [--require C1 C2 C3]
+                             [--manifest corpus/manifest.json] [--require C1 C2 C3] [--shared-runner]
 
 A criterion listed in --require must produce at least one row, so a missing measurement fails the gate
 instead of passing silently. C1 also fails for any corpus repo that failed to run or has no result file.
@@ -48,18 +48,27 @@ def check_c1(limits, corpus_results, expected_ids=None):
     return rows
 
 
-def check_c2(limits, bench, baseline):
+def check_c2(limits, bench, baseline, shared_runner=False):
+    """Absolute limits at 10000+ packages, plus regression against the stored baseline.
+
+    shared_runner widens the regression percentage because shared CI machines are noisy. A regression must
+    also exceed regression_floor_seconds, so millisecond-scale timings cannot fail on jitter alone.
+    """
+    pct = limits['shared_runner_regression_pct'] if shared_runner else limits['max_regression_pct']
+    floor = limits.get('regression_floor_seconds', 0)
     rows = []
     for key, entry in sorted((bench or {}).items()):
         if entry['packages'] >= 10000:  # absolute limits only make sense at the target scale
             ok = entry['noop']['p95'] <= limits['max_noop_seconds'] and entry['one_file']['p95'] <= limits['max_one_file_seconds']
             rows.append((ok, 'C2', key + ': noop=' + str(entry['noop']['p95']) + 's one_file=' + str(entry['one_file']['p95']) + 's'))
         base = (baseline or {}).get(key)
-        if base:  # regression check against the stored baseline
-            for phase in ('cold', 'noop', 'one_file'):
-                allowed = base[phase]['p95'] * (1 + limits['max_regression_pct'] / 100)
-                ok = entry[phase]['p95'] <= allowed
-                rows.append((ok, 'C2', key + ' ' + phase + ': ' + str(entry[phase]['p95']) + 's, limit ' + str(round(allowed, 2)) + 's'))
+        if not base:  # without a baseline the regression check cannot run, and a skipped check must not look like a pass
+            rows.append((False, 'C2', key + ': no baseline; record one with the bench workflow (record_baseline) and commit baseline.json'))
+            continue
+        for phase in ('cold', 'noop', 'one_file'):
+            allowed = max(base[phase]['p95'] * (1 + pct / 100), base[phase]['p95'] + floor)
+            ok = entry[phase]['p95'] <= allowed
+            rows.append((ok, 'C2', key + ' ' + phase + ': ' + str(entry[phase]['p95']) + 's, limit ' + str(round(allowed, 2)) + 's'))
     return rows
 
 
@@ -78,13 +87,14 @@ def main():
     parser.add_argument('--baseline', default=str(ROOT / 'bench_results' / 'baseline.json'))
     parser.add_argument('--mutations', default=str(ROOT / 'bench_results' / 'mutations.json'))
     parser.add_argument('--manifest', default=str(ROOT / 'corpus' / 'manifest.json'))  # source of expected corpus ids
+    parser.add_argument('--shared-runner', action='store_true')  # benchmarks ran on a shared CI runner: wider tolerance
     parser.add_argument('--require', nargs='*', default=[], choices=['C1', 'C2', 'C3'])
     args = parser.parse_args()
     limits = load_json(args.thresholds)
     corpus = [load_json(p) for p in sorted(glob.glob(args.corpus_glob))]
     expected = [e['id'] for e in load_json(args.manifest)['repos']] if 'C1' in args.require else None
     rows = (check_c1(limits['C1'], corpus, expected)
-            + check_c2(limits['C2'], load_optional(args.bench), load_optional(args.baseline))
+            + check_c2(limits['C2'], load_optional(args.bench), load_optional(args.baseline), args.shared_runner)
             + check_c3(limits['C3'], load_optional(args.mutations)))
     for criterion in args.require:  # a required criterion with no rows means its measurements never arrived
         if not any(row[1] == criterion for row in rows):

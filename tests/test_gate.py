@@ -18,7 +18,8 @@ class GateTest(unittest.TestCase):
         self.assertEqual([r[0] for r in gate.check_c1(limits, [good, bad])], [True, False])
 
     def test_c2_regression_against_baseline(self):
-        limits = {'max_noop_seconds': 10, 'max_one_file_seconds': 2, 'max_regression_pct': 15}
+        limits = {'max_noop_seconds': 10, 'max_one_file_seconds': 2, 'max_regression_pct': 15,
+                  'shared_runner_regression_pct': 50, 'regression_floor_seconds': 0.25}
         phase = lambda v: {'p95': v}
         base = {'py-100': {'packages': 100, 'cold': phase(10), 'noop': phase(1), 'one_file': phase(1)}}
         slow = {'py-100': {'packages': 100, 'cold': phase(12), 'noop': phase(1), 'one_file': phase(1)}}
@@ -41,6 +42,34 @@ class GateTest(unittest.TestCase):
         good = {'id': 'x', 'passed': True, 'depdiff': {'missing': 0, 'extra_rate': 0.0}}
         rows = gate.check_c1(limits, [good], expected_ids=['x', 'never-ran'])
         self.assertEqual([(r[0], r[2].split(':')[0]) for r in rows], [(True, 'x'), (False, 'never-ran')])
+
+    LIMITS = {'max_noop_seconds': 10, 'max_one_file_seconds': 2, 'max_regression_pct': 15,
+              'shared_runner_regression_pct': 50, 'regression_floor_seconds': 0.25}
+
+    @staticmethod
+    def entry(cold, noop=1, one_file=1, packages=1000):
+        phase = lambda v: {'p95': v}
+        return {'packages': packages, 'cold': phase(cold), 'noop': phase(noop), 'one_file': phase(one_file)}
+
+    def test_c2_shared_runner_tolerates_noise_that_dedicated_rejects(self):
+        base = {'py-1000': self.entry(10)}
+        slow = {'py-1000': self.entry(13)}  # 30% slower: over 15%, under 50%
+        self.assertFalse(all(r[0] for r in gate.check_c2(self.LIMITS, slow, base)))
+        self.assertTrue(all(r[0] for r in gate.check_c2(self.LIMITS, slow, base, shared_runner=True)))
+
+    def test_c2_shared_runner_still_catches_a_real_regression(self):
+        rows = gate.check_c2(self.LIMITS, {'py-1000': self.entry(16)}, {'py-1000': self.entry(10)}, shared_runner=True)
+        self.assertFalse(all(r[0] for r in rows))  # 60% slower
+
+    def test_c2_floor_ignores_millisecond_jitter(self):
+        base = {'py-100': self.entry(0.008, 0.007, 0.007, packages=100)}
+        jitter = {'py-100': self.entry(0.012, 0.011, 0.011, packages=100)}  # +50% but only a few ms
+        self.assertTrue(all(r[0] for r in gate.check_c2(self.LIMITS, jitter, base)))
+
+    def test_c2_missing_baseline_fails(self):
+        rows = gate.check_c2(self.LIMITS, {'py-1000': self.entry(10)}, {})
+        self.assertEqual([r[0] for r in rows], [False])
+        self.assertIn('no baseline', rows[0][2])
 
 
 class GateMainTest(unittest.TestCase):

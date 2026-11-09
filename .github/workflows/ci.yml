@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: '17 6 * * *'  # nightly: corpus and benchmark stages
   workflow_dispatch:
+    inputs:
+      record_baseline:
+        description: 'Benchmark only: record bench_results/baseline.json on this runner type instead of gating'
+        type: boolean
+        default: false
 
 env:
   # bazelisk installed under the name bazel, so .bazelversion is honoured
@@ -82,11 +87,14 @@ jobs:
       - name: Benchmark
         run: |
           source scripts/env.sh
-          python3 tools/bench.py --lang ${{ matrix.lang }} --packages ${{ matrix.packages }} --gazelle "$GAZELLE_BIN"
+          python3 tools/bench.py --lang ${{ matrix.lang }} --packages ${{ matrix.packages }} --gazelle "$GAZELLE_BIN" --runs 10 ${{ inputs.record_baseline && '--baseline' || '' }}
       - uses: actions/upload-artifact@v4
         with:
           name: bench-${{ matrix.lang }}-${{ matrix.packages }}
-          path: bench_results/bench.json
+          path: |
+            bench_results/bench.json
+            bench_results/baseline.json
+          if-no-files-found: ignore  # baseline.json exists only on a record_baseline run
 
   gate:  # final: evaluates every threshold
     if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
@@ -110,5 +118,23 @@ jobs:
               merged.update(json.load(open(path)))
           json.dump(merged, open('bench_results/bench.json', 'w'))
           EOF
+      - name: Merge recorded baselines
+        if: inputs.record_baseline
+        run: |
+          python3 - <<'EOF'
+          import glob, json
+          merged = {}
+          for path in glob.glob('artifacts/bench-*/baseline.json'):
+              merged.update(json.load(open(path)))
+          json.dump(merged, open('bench_results/baseline.json', 'w'), indent=2, sort_keys=True)
+          EOF
+      - name: Upload recorded baseline (commit it as bench_results/baseline.json)
+        if: inputs.record_baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-merged
+          path: bench_results/baseline.json
       - name: Gate
-        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json' --require C1 C2
+        if: '!inputs.record_baseline'  # a baseline-recording run has nothing to compare against
+        # --shared-runner widens the regression tolerance unless BENCH_RUNNER names a dedicated runner
+        run: python3 tools/gate.py --corpus-glob 'artifacts/corpus-*/results.json' --require C1 C2 ${{ vars.BENCH_RUNNER == '' && '--shared-runner' || '' }}
