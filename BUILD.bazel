@@ -5,12 +5,16 @@
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
 
 # One Gazelle binary that combines every language extension under test (C7).
-# Start with Go and proto, which ship inside Gazelle; step 1b adds the others.
+# Go and proto ship inside Gazelle. Python, Java and Kotlin come from the modules in MODULE.bazel.
+# JS/TS is still missing (step 1c): the ts corpus entries use -lang=js and fail until an extension is added here.
 gazelle_binary(
     name = "gazelle_polyglot",
     languages = [
         "@gazelle//language/proto",  # proto first: other languages resolve against proto rules
         "@gazelle//language/go",
+        "@rules_python_gazelle_plugin//python",  # -lang=python
+        "@contrib_rules_jvm//java/gazelle",  # -lang=java
+        "@gazelle_kotlin//kotlin",  # -lang=kotlin; pinned by git_override in MODULE.bazel
     ],
     visibility = ["//visibility:public"],
 )

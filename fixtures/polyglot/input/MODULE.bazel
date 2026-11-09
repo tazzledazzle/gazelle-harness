@@ -1,5 +1,5 @@
 module(name = 'polyglot_fixture', version = '0.0.0')
 bazel_dep(name = 'rules_java', version = '9.6.1')
-bazel_dep(name = 'rules_python', version = '2.4.3')
+bazel_dep(name = 'rules_python', version = '0.40.0')  # same as the root module; 2.4.3 needs a newer Bazel than .bazelversion
 python = use_extension('@rules_python//python/extensions:python.bzl', 'python')
 python.toolchain(python_version = '3.12', is_default = True)

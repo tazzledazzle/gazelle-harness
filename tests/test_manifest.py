@@ -84,3 +84,24 @@ class CommittedManifestTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PolyglotBinaryTest(unittest.TestCase):
+    """Every language the corpus asks Gazelle for (-lang=...) must be linked into gazelle_polyglot."""
+
+    # -lang value -> a fragment of the Bazel label that provides the extension
+    EXTENSIONS = {'python': 'rules_python_gazelle_plugin//python', 'java': 'contrib_rules_jvm//java/gazelle',
+                  'kotlin': 'gazelle_kotlin//kotlin'}
+
+    def test_binary_links_the_extensions_the_corpus_uses(self):
+        build = (ROOT / 'BUILD.bazel').read_text()
+        used = {a.split('=', 1)[1] for r in load_json(ROOT / 'corpus' / 'manifest.json')['repos']
+                for a in r['gazelle_args'] if a.startswith('-lang=')}
+        for lang in sorted(used & set(self.EXTENSIONS)):
+            self.assertIn(self.EXTENSIONS[lang], build, '-lang=' + lang + ' is used by the corpus but not linked into gazelle_polyglot')
+
+    def test_fixture_and_root_agree_on_rules_python(self):
+        pin = re.compile(r"name = '(rules_python)', version = '([^']+)'")
+        root = pin.search((ROOT / 'MODULE.bazel').read_text()).group(2)
+        fixture = pin.search((ROOT / 'fixtures' / 'polyglot' / 'input' / 'MODULE.bazel').read_text()).group(2)
+        self.assertEqual(fixture, root)
