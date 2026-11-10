@@ -1,0 +1,14 @@
+--- a/cc/private/toolchain/unix_cc_configure.bzl
++++ b/cc/private/toolchain/unix_cc_configure.bzl
+@@ -580,7 +580,10 @@ def configure_unix_toolchain(repository_ctx, cpu_value, overridden_tools):
+         ) +
+         # Always included in case the user has Xcode + the CLT installed, both
+         # paths can be used interchangeably
+-        ["/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"],
++        [
++            "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
++            "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
++        ],
+     )
+ 
+     generate_modulemap = is_clang
