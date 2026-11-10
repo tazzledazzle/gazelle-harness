@@ -6,6 +6,10 @@ WS="${1:-.}"                                                  # directory to che
 : "${GAZELLE_BIN:?set GAZELLE_BIN (source scripts/env.sh)}"   # refuse to run without a binary
 STDERR_FILE="$(mktemp)"                                       # warnings go here, kept out of the diff
 trap 'rm -f "$STDERR_FILE"' EXIT                              # the file used to be left behind on every run
+# javaparser (Kotlin/Java Gazelle extension) looks for JAVA_RUNFILES when not launched via bazel run
+if [[ -d "${GAZELLE_BIN}.runfiles" ]]; then
+  export JAVA_RUNFILES="${GAZELLE_BIN}.runfiles"
+fi
 # diff mode prints what WOULD change and writes nothing; -repo_root pins the root explicitly
 DIFF="$(cd "$WS" && "$GAZELLE_BIN" -mode=diff -repo_root="$PWD" 2>"$STDERR_FILE")"
 STATUS=$?

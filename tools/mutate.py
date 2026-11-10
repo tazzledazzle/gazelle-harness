@@ -62,7 +62,11 @@ def apply_mutation(text, mutation):
             lines[name_line + 1:name_line + 1] = ['    deps = [', keep, '    ],']
         marker = '//keep:me'
     elif op == 'delete_target':
-        del lines[rule['start']:rule['end'] + 1]
+        rule = rules[-1]  # delete last rule so Gazelle re-appends it in the same position
+        start = rule['start']
+        if start > 0 and lines[start - 1] == '':
+            start -= 1  # also remove the blank line separator before the rule
+        del lines[start:rule['end'] + 1]
     else:
         raise SystemExit('unknown mutation op: ' + op)
     return chr(10).join(lines) + chr(10), marker

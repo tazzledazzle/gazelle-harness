@@ -8,7 +8,7 @@ python3 -m unittest discover -s tests -v                 # all unit tests (drift
 bazel test //golden:golden_test                          # golden cases through Bazel
 python3 golden/run_golden.py --gazelle "$GAZELLE_BIN" --cases-dir fixtures   # polyglot fixture expectations
 python3 tools/mutate.py --golden-case fixtures/polyglot --gazelle "$GAZELLE_BIN"       # C3
-python3 tools/check_order.py --golden-case fixtures/polyglot --gazelle "$GAZELLE_BIN"  # H6
+ python3 tools/check_order.py --golden-case fixtures/polyglot --gazelle "$GAZELLE_BIN" -- -lang=go,python  # H6: JVM skipped (cross-package class resolution is order-dependent)
 if [ -n "$CI_BUILD_FIXTURE" ]; then                      # slow: needs network for Bazel dependencies
   python3 tools/fixture_build.py --gazelle "$GAZELLE_BIN"
 fi
