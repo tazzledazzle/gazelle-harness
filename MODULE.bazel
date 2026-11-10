@@ -19,6 +19,15 @@ git_override(
     commit = '14351133e6e011c98fa534db6bdf899c09b13432',
 )
 
+# macOS 26 / Xcode 21+: Apple clang adds SDKSettings.json to .d files. Patch
+# rules_cc so the Xcode SDK root is declared as a builtin include directory.
+single_version_override(
+    module_name = "rules_cc",
+    version = "0.1.5",
+    patches = ["//patches:rules_cc_macos_sdk_root.patch"],
+    patch_strip = 1,
+)
+
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = "1.26.0")
 
