@@ -106,6 +106,10 @@ class PolyglotBinaryTest(unittest.TestCase):
         fixture = pin.search((ROOT / 'fixtures' / 'polyglot' / 'input' / 'MODULE.bazel').read_text()).group(2)
         self.assertEqual(fixture, root)
 
+    def test_polyglot_fixture_declares_rules_kotlin(self):
+        fixture = (ROOT / 'fixtures' / 'polyglot' / 'input' / 'MODULE.bazel').read_text()
+        self.assertIn("bazel_dep(name = 'rules_kotlin',", fixture)
+
     def test_module_patch_labels_point_to_real_files(self):
         for label in re.findall(r'patches = \[(.*?)\]', (ROOT / 'MODULE.bazel').read_text()):
             for patch_label in re.findall(r'"//([^:]+):([^"]+)"', label):
