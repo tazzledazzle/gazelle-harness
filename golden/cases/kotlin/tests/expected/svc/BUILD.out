@@ -1,0 +1,19 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library", "kt_jvm_test")
+
+kt_jvm_library(
+    name = "svc",
+    srcs = ["Api.kt"],
+    deps = ["@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core"],
+    visibility = ["//visibility:public"],
+)
+
+kt_jvm_test(
+    name = "ApiTest",
+    srcs = ["ApiTest.kt"],
+    associates = [":svc"],
+    deps = [
+        ":svc",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+    test_class = "com.example.svc.ApiTest",
+)

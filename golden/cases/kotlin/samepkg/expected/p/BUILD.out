@@ -1,0 +1,14 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "A",
+    srcs = ["A.kt"],
+    visibility = ["//visibility:public"],
+)
+
+kt_jvm_library(
+    name = "B",
+    srcs = ["B.kt"],
+    deps = [":A"],
+    visibility = ["//visibility:public"],
+)
