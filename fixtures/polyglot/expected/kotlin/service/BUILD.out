@@ -1,0 +1,14 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "service",
+    srcs = ["Service.kt"],
+    visibility = ["//:__subpackages__"],
+    deps = ["//java/greeter"],
+)
+
+kt_jvm_library(
+    name = "service",
+    srcs = ["Service.kt"],
+    visibility = ["//visibility:public"],
+)

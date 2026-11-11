@@ -1,1 +1,0 @@
-# gazelle:kt_plugin kotlinx.serialization //tools:serialization_plugin

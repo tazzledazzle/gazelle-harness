@@ -1,0 +1,15 @@
+load("@rules_java//java:defs.bzl", "java_binary", "java_library")
+
+java_library(
+    name = "app",
+    srcs = ["Main.java"],
+    visibility = ["//:__subpackages__"],
+    deps = ["//java/greeter"],
+)
+
+java_binary(
+    name = "Main",
+    main_class = "com.example.app.Main",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":app"],
+)

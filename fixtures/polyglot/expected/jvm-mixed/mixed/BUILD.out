@@ -1,0 +1,19 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "mixed",
+    srcs = [
+        "Mixed.java",
+        "Mixed.kt",
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+kt_jvm_library(
+    name = "mixed",
+    srcs = [
+        "Mixed.java",
+        "Mixed.kt",
+    ],
+    visibility = ["//visibility:public"],
+)

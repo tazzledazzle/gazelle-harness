@@ -1,3 +1,0 @@
-{"version": "2", "artifacts": {}, "dependencies": {}, "packages": {
-  "org.jetbrains.kotlinx:kotlinx-coroutines-core": ["kotlinx.coroutines"],
-  "org.junit.jupiter:junit-jupiter-api": ["org.junit.jupiter.api"]}}

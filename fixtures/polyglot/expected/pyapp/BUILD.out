@@ -1,0 +1,26 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+# gazelle:resolve py pylib //pylib
+
+py_binary(
+    name = "app",
+    srcs = ["app.py"],
+    visibility = ["//:__subpackages__"],
+    deps = ["//pylib"],
+)
+
+py_library(
+    name = "pyapp",
+    srcs = [
+        "__init__.py",
+        "app.py",
+    ],
+    visibility = ["//:__subpackages__"],
+    deps = ["//pylib"],
+)
+
+py_test(
+    name = "app_test",
+    srcs = ["app_test.py"],
+    deps = [":pyapp"],
+)
